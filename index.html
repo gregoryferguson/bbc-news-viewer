@@ -3,37 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <title>BBC News Headlines</title>
- <style>
-  body {
-    font-family: Verdana, Geneva, sans-serif;
-    font-size: 13px;
-    background-color: #f6f6ef;
-    color: #000;
-    max-width: 640px;
-    margin: 2em auto;
-    padding: 0 1em;
-  }
-  h1 {
-    font-size: 16px;
-    margin-bottom: 1em;
-    color: #ff6600;
-  }
-  ul {
-    list-style: none;
-    padding: 0;
-  }
-  li {
-    margin-bottom: 10px;
-  }
-  a {
-    color: #0000cc;
-    text-decoration: none;
-  }
-  a:hover {
-    text-decoration: underline;
-  }
-</style>
-
+  <style>
+    body {
+      font-family: Verdana, Geneva, sans-serif;
+      font-size: 13px;
+      background-color: #f6f6ef;
+      color: #000;
+      max-width: 640px;
+      margin: 2em auto;
+      padding: 0 1em;
+    }
+    h1 {
+      font-size: 16px;
+      margin-bottom: 1em;
+      color: #ff6600;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      margin-bottom: 10px;
+    }
+    a {
+      color: #0000cc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
   <h1>BBC News Headlines</h1>
@@ -48,21 +47,41 @@
       const parser = new DOMParser();
       const xml = parser.parseFromString(data.contents, "text/xml");
       const items = xml.querySelectorAll("item");
+
       const newsList = document.getElementById("news-list");
       newsList.innerHTML = "";
+
+      // Load previous state from localStorage
+      const prevPositions = JSON.parse(localStorage.getItem("bbcHeadlineOrder") || "{}");
+      const currentOrder = {};
 
       items.forEach((item, i) => {
         const title = item.querySelector("title").textContent;
         const link = item.querySelector("link").textContent;
 
+        currentOrder[title] = i;
+
+        // Compare to previous position
+        let symbol = "◼";
+        if (prevPositions[title] !== undefined) {
+          if (i < prevPositions[title]) {
+            symbol = "▲";
+          } else if (i > prevPositions[title]) {
+            symbol = "▼";
+          }
+        }
+
         const li = document.createElement("li");
         const a = document.createElement("a");
         a.href = link;
-        a.textContent = `${i + 1}. ${title}`;
+        a.textContent = `${symbol} ${i + 1}. ${title}`;
         a.target = "_blank";
         li.appendChild(a);
         newsList.appendChild(li);
       });
+
+      // Save current order for next visit
+      localStorage.setItem("bbcHeadlineOrder", JSON.stringify(currentOrder));
     }
 
     fetchRSS();
