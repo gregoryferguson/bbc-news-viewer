@@ -74,7 +74,7 @@
         const li = document.createElement("li");
         const a = document.createElement("a");
         a.href = link;
-        a.textContent = `${symbol} ${i + 1}. ${title}`;
+        a.innerHTML = `<span style="color:#0000cc;">${symbol}</span> ${i + 1}. ${title}`;
         a.target = "_blank";
         li.appendChild(a);
         newsList.appendChild(li);
