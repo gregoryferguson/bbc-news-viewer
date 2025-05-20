@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BBC News Headlines</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 2em auto; }
+    h1 { font-size: 1.5em; }
+    ul { list-style: none; padding: 0; }
+    li { margin-bottom: 1em; }
+    a { text-decoration: none; color: #0645AD; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>BBC News Headlines</h1>
+  <ul id="news-list">Loading...</ul>
+
+  <script>
+    async function fetchRSS() {
+      const proxy = 'https://api.allorigins.win/get?url=';
+      const feedUrl = 'http://feeds.bbci.co.uk/news/rss.xml';
+      const response = await fetch(proxy + encodeURIComponent(feedUrl));
+      const data = await response.json();
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(data.contents, "text/xml");
+      const items = xml.querySelectorAll("item");
+      const newsList = document.getElementById("news-list");
+      newsList.innerHTML = "";
+
+      items.forEach((item, i) => {
+        const title = item.querySelector("title").textContent;
+        const link = item.querySelector("link").textContent;
+
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = link;
+        a.textContent = `${i + 1}. ${title}`;
+        a.target = "_blank";
+        li.appendChild(a);
+        newsList.appendChild(li);
+      });
+    }
+
+    fetchRSS();
+  </script>
+</body>
+</html>
