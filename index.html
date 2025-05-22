@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>BBC News Headlines</title>
+  <title>BBC News Viewer</title>
   <style>
     body {
       font-family: Verdana, Geneva, sans-serif;
@@ -17,6 +17,11 @@
       font-size: 16px;
       margin-bottom: 1em;
       color: #ff6600;
+    }
+    h2 {
+      font-size: 14px;
+      color: #ff6600;
+      margin-top: 2em;
     }
     ul {
       list-style: none;
@@ -36,55 +41,43 @@
 </head>
 <body>
   <h1>BBC News Headlines</h1>
-  <ul id="news-list">Loading...</ul>
+  <ul id="bbc-news"></ul>
+
+  <h2>BBC Northern Ireland Headlines</h2>
+  <ul id="bbc-ni-news"></ul>
 
   <script>
-    async function fetchRSS() {
+    async function fetchAndDisplay(feedUrl, elementId, limit = 20) {
       const proxy = 'https://api.allorigins.win/get?url=';
-      const feedUrl = 'http://feeds.bbci.co.uk/news/rss.xml';
-      const response = await fetch(proxy + encodeURIComponent(feedUrl));
-      const data = await response.json();
-      const parser = new DOMParser();
-      const xml = parser.parseFromString(data.contents, "text/xml");
-      const items = xml.querySelectorAll("item");
+      try {
+        const response = await fetch(proxy + encodeURIComponent(feedUrl));
+        const data = await response.json();
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(data.contents, "text/xml");
+        const items = xml.querySelectorAll("item");
+        const list = document.getElementById(elementId);
+        list.innerHTML = "";
 
-      const newsList = document.getElementById("news-list");
-      newsList.innerHTML = "";
+        items.forEach((item, index) => {
+          if (index >= limit) return;
+          const title = item.querySelector("title").textContent;
+          const link = item.querySelector("link").textContent;
 
-      // Load previous state from localStorage
-      const prevPositions = JSON.parse(localStorage.getItem("bbcHeadlineOrder") || "{}");
-      const currentOrder = {};
-
-      items.forEach((item, i) => {
-        const title = item.querySelector("title").textContent;
-        const link = item.querySelector("link").textContent;
-
-        currentOrder[title] = i;
-
-        // Compare to previous position
-        let symbol = "◼";
-        if (prevPositions[title] !== undefined) {
-          if (i < prevPositions[title]) {
-            symbol = "▲";
-          } else if (i > prevPositions[title]) {
-            symbol = "▼";
-          }
-        }
-
-        const li = document.createElement("li");
-        const a = document.createElement("a");
-        a.href = link;
-        a.innerHTML = `<span style="color:#0000cc;">${symbol}</span> ${i + 1}. ${title}`;
-        a.target = "_blank";
-        li.appendChild(a);
-        newsList.appendChild(li);
-      });
-
-      // Save current order for next visit
-      localStorage.setItem("bbcHeadlineOrder", JSON.stringify(currentOrder));
+          const li = document.createElement("li");
+          const a = document.createElement("a");
+          a.href = link;
+          a.textContent = `${index + 1}. ${title}`;
+          a.target = "_blank";
+          li.appendChild(a);
+          list.appendChild(li);
+        });
+      } catch (err) {
+        document.getElementById(elementId).innerHTML = "<li>Error loading feed.</li>";
+      }
     }
 
-    fetchRSS();
+    fetchAndDisplay("http://feeds.bbci.co.uk/news/rss.xml", "bbc-news");
+    fetchAndDisplay("http://feeds.bbci.co.uk/news/northern_ireland/rss.xml", "bbc-ni-news");
   </script>
 </body>
 </html>
